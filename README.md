@@ -1,150 +1,297 @@
-# 🛒 Ecommerce Transactions Data Pipeline
+# 🛍️ E-commerce Transactions Data Pipeline using AWS Glue, Lambda & Athena
 
-A complete AWS-based data pipeline that processes e-commerce transaction data using AWS Glue, S3, Lambda, and Athena.
+---
 
-```
-Raw Data (S3) → Crawler #1 → ETL Job (Lambda Triggered) → Crawler #2 → Athena Queries
-    │                │              │                      │              │
-    └────────────────┴──────────────┴──────────────────────┴──────────────┘
-```
+## 📌 Project Overview
 
-## 📂 Dataset Description
-We start with a raw dataset containing e-commerce transaction records, which are later transformed into a structured format.
+This project demonstrates the creation of an **event-driven ETL pipeline** for processing **e-commerce transaction data** using **AWS Lambda, Glue, Athena, and S3**.
 
-### Transformed Dataset Columns
-| Column Name      | Description                    |
-|------------------|-------------------------------|
-| transaction_id   | Unique ID for each transaction|
-| customer_name    | Name of the customer          |
-| product_name     | Name of the purchased product |
-| category         | Product category              |
-| amount           | Price per unit                |
-| transaction_date | Date of transaction           |
-| payment_method   | Payment type (e.g., Credit Card, UPI) |
-| quantity         | Number of units purchased     |
-| total_price      | Total cost (amount × quantity)|
-| partition_0      | Internal partition column     |
-| year             | Year of transaction           |
-| month            | Month of transaction          |
+The pipeline automatically triggers data transformation when a new file is uploaded to **Amazon S3**, processes the data using **Glue ETL**, updates schema using **Glue Crawlers**, and makes the transformed data queryable using **Amazon Athena**.
 
-## ☁️ AWS Services Used
-- **Amazon S3** → Stores raw and transformed datasets.
-- **AWS Glue Crawler** → Automatically detects schema for raw and transformed data.
-- **AWS Glue ETL Job** → Processes and transforms the dataset.
-- **AWS Lambda** → Orchestrates ETL execution and crawler automation.
-- **Amazon Athena** → Performs SQL-based queries on the transformed dataset.
+---
+
+## 🗂️ Table of Contents
+
+- [Project Architecture](#-project-architecture)
+- [Dataset Description](#-dataset-description)
+- [AWS Services Used](#-aws-services-used)
+- [Project Workflow](#-project-workflow)
+  - [1. Raw Data Ingestion](#1-raw-data-ingestion)
+  - [2. Lambda Trigger](#2-lambda-trigger)
+  - [3. Glue Crawlers](#3-glue-crawlers)
+  - [4. Glue ETL Job](#4-glue-etl-job)
+  - [5. Athena Querying](#5-athena-querying)
+- [Transformed Dataset Schema](#-transformed-dataset-schema)
+- [Lambda Function Details](#-lambda-function-details)
+- [SQL Queries](#-sql-queries)
+- [Folder Structure](#-folder-structure)
+- [How to Run](#-how-to-run)
+- [Future Improvements](#-future-improvements)
+- [Author](#-author)
+
+---
 
 ## 🏗️ Project Architecture
 
-The pipeline follows an event-driven architecture with automated schema management:
+```plaintext
+          ┌────────────────────┐
+          │   Raw Dataset      │
+          │  (S3 Bucket)       │
+          └─────────┬──────────┘
+                    │  (PUT/POST Event)
+                    ▼
+          ┌────────────────────┐
+          │  Lambda Function   │
+          │ trigger-glue-etl   │
+          └─────────┬──────────┘
+                    │
+         Starts Glue ETL Job
+                    ▼
+        ┌──────────────────────┐
+        │   Glue ETL Job       │
+        │  (pandas_etl_job)    │
+        └─────────┬────────────┘
+                  │
+        Writes Transformed Data
+                  ▼
+        ┌──────────────────────┐
+        │ Transformed Dataset  │
+        │     (S3 Bucket)      │
+        └─────────┬────────────┘
+                  │
+    Starts Crawler for Schema Update
+                  ▼
+        ┌──────────────────────┐
+        │ Glue Crawler #2      │
+        │ curated_to_analysis  │
+        └─────────┬────────────┘
+                  │
+                  ▼
+        ┌──────────────────────┐
+        │ Amazon Athena        │
+        │ Query Transformed    │
+        │ Data for Analysis    │
+        └──────────────────────┘
+```
 
-### Crawler Execution Strategy
-- **Crawler #1** → Runs only once upon initial table creation or when schema changes occur in raw data
-- **ETL Job** → Triggered automatically by S3 events via Lambda when new raw data arrives
-- **Crawler #2** → Executes only after ETL job completion (triggered automatically by Lambda)
+---
 
-This sequence ensures transformed data schema is always registered in the Glue Data Catalog before Athena querying begins.
+## 📊 Dataset Description
 
-## 🚀 Project Workflow
+The dataset contains e-commerce transaction records with the following key attributes:
+
+- **Transaction ID**: Unique identifier for each transaction
+- **Customer Information**: Customer ID, demographics
+- **Product Details**: Product ID, category, price
+- **Transaction Details**: Timestamp, quantity, total amount
+- **Location Data**: Geographic information for analysis
+
+---
+
+## ☁️ AWS Services Used
+
+| Service | Purpose |
+|---------|----------|
+| **Amazon S3** | Data storage for raw and transformed datasets |
+| **AWS Lambda** | Event-driven trigger for ETL pipeline |
+| **AWS Glue** | Data cataloging and ETL transformations |
+| **Amazon Athena** | Serverless querying of transformed data |
+| **AWS IAM** | Identity and access management |
+
+---
+
+## 🔄 Project Workflow
 
 ### 1. Raw Data Ingestion
-- The raw e-commerce dataset is uploaded to an Amazon S3 bucket.
-- This dataset contains multiple unstructured files that need schema detection.
-- S3 event notification triggers the automated pipeline.
+- Raw e-commerce transaction data is uploaded to the **source S3 bucket**
+- Data format: CSV files with transaction records
+- S3 bucket configured with event notifications
 
-### 2. Schema Detection & ETL Processing
-- **Crawler #1** → Scans raw dataset and generates schema (runs once or on schema changes)
-- **Lambda Function** → Receives S3 event notification and triggers ETL job
-- **ETL Job** → Processes data using PySpark transformations
+### 2. Lambda Trigger
+- **Lambda function** (`trigger-glue-etl`) is automatically invoked on S3 PUT/POST events
+- Function validates the uploaded file and initiates the ETL process
+- Error handling and logging implemented for monitoring
 
-### 3. Post-ETL Schema Update
-- **Crawler #2** → Automatically triggered by Lambda after ETL completion
-- Updates transformed dataset schema in AWS Glue Data Catalog
-- Ensures Athena has current schema before queries execute
+### 3. Glue Crawlers
+- **Crawler #1**: Scans raw data bucket to update schema in Glue Data Catalog
+- **Crawler #2**: Scans transformed data bucket after ETL completion
+- Automatic schema detection and table creation
 
-### 4. Athena Querying
-- The final transformed data is queried using Amazon Athena.
-- SQL queries are saved separately for future reference.
+### 4. Glue ETL Job
+- **ETL Job** (`pandas_etl_job`) processes the raw data
+- Data transformations include:
+  - Data cleaning and validation
+  - Type conversions and formatting
+  - Aggregations and calculations
+  - Partitioning for optimal querying
 
-## 🔗 Lambda Automation
+### 5. Athena Querying
+- Transformed data becomes queryable through **Amazon Athena**
+- SQL-based analytics and reporting
+- Integration with visualization tools
 
-Lambda orchestrates the entire pipeline, providing event-driven ETL execution and automated schema updates. The function monitors S3 events, manages ETL job execution, and ensures proper crawler sequencing.
+---
+
+## 🗃️ Transformed Dataset Schema
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `transaction_id` | string | Unique transaction identifier |
+| `customer_id` | string | Customer unique identifier |
+| `product_id` | string | Product unique identifier |
+| `product_category` | string | Product category classification |
+| `transaction_date` | date | Date of transaction |
+| `transaction_amount` | double | Total transaction amount |
+| `quantity` | int | Number of items purchased |
+| `customer_location` | string | Customer geographic location |
+| `payment_method` | string | Payment method used |
+
+---
+
+## ⚡ Lambda Function Details
+
+### Function Configuration
+- **Runtime**: Python 3.9
+- **Memory**: 128 MB
+- **Timeout**: 5 minutes
+- **Trigger**: S3 Event Notification
+
+### Key Features
+- Automatic Glue job triggering
+- Error handling and retry logic
+- CloudWatch logging integration
+- Environment variable configuration
 
 ```python
-import boto3
-import json
-
 def lambda_handler(event, context):
-    glue_client = boto3.client('glue')
-    
-    # Parse S3 event
-    for record in event['Records']:
-        bucket = record['s3']['bucket']['name']
-        key = record['s3']['object']['key']
-        
-        # Trigger ETL job for new raw data
-        if 'raw-data/' in key:
-            response = glue_client.start_job_run(
-                JobName='ecommerce-etl-job',
-                Arguments={
-                    '--source_bucket': bucket,
-                    '--source_key': key
-                }
-            )
-            
-            # Wait for ETL completion then trigger Crawler #2
-            job_run_id = response['JobRunId']
-            
-            # Monitor job and trigger post-ETL crawler
-            glue_client.start_crawler(
-                Name='transformed-data-crawler'
-            )
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Pipeline triggered successfully')
-    }
+    # Extract S3 event details
+    # Validate file format
+    # Trigger Glue ETL job
+    # Handle errors and logging
+    pass
 ```
 
-## 🛠️ Glue ETL Job Details
-A PySpark-based Glue ETL job performs:
-- Data cleaning
-- Column transformations
-- Adding year and month partitions
-- Calculating `total_price`
+---
 
-The transformed dataset is saved back to S3.
+## 🔍 SQL Queries
 
-## 📑 Transformed Dataset Schema
-```
-transaction_id STRING
-customer_name STRING
-product_name STRING
-category STRING
-amount DOUBLE
-transaction_date DATE
-payment_method STRING
-quantity INT
-total_price DOUBLE
-partition_0 STRING
-year INT
-month INT
+### Sample Analytical Queries
+
+#### 1. Top Product Categories by Revenue
+```sql
+SELECT 
+    product_category,
+    SUM(transaction_amount) as total_revenue,
+    COUNT(*) as transaction_count
+FROM transformed_transactions
+GROUP BY product_category
+ORDER BY total_revenue DESC
+LIMIT 10;
 ```
 
-## 📝 SQL Queries
-All SQL queries used for analysis are saved in the repository:
-- [`queries/`](./queries/) → Folder containing each query separately.
-- [`all_queries.sql`](./queries/all_queries.sql) → A single file containing all queries combined.
+#### 2. Monthly Sales Trends
+```sql
+SELECT 
+    DATE_TRUNC('month', transaction_date) as month,
+    SUM(transaction_amount) as monthly_revenue,
+    COUNT(DISTINCT customer_id) as unique_customers
+FROM transformed_transactions
+GROUP BY DATE_TRUNC('month', transaction_date)
+ORDER BY month;
+```
+
+#### 3. Customer Segmentation
+```sql
+SELECT 
+    customer_location,
+    AVG(transaction_amount) as avg_transaction_value,
+    COUNT(*) as transaction_frequency
+FROM transformed_transactions
+GROUP BY customer_location
+ORDER BY avg_transaction_value DESC;
+```
+
+---
 
 ## 📁 Folder Structure
+
 ```
-ecommerce-transactions-pipeline/
-├── queries/
-│   ├── all_queries.sql
-│   └── individual_queries/
-├── etl_scripts/
-│   └── glue_etl_job.py
-├── lambda/
-│   └── pipeline_orchestrator.py
+Ecommerce_Transactions_Data_Pipeline/
+├── lambda_functions/
+│   ├── trigger-glue-etl.py
+│   └── requirements.txt
+├── glue_scripts/
+│   ├── pandas_etl_job.py
+│   └── transformation_utils.py
+├── sql_queries/
+│   ├── analytics_queries.sql
+│   └── data_validation.sql
+├── infrastructure/
+│   ├── cloudformation_template.yaml
+│   └── iam_policies.json
+├── sample_data/
+│   └── sample_transactions.csv
 └── README.md
 ```
+
+---
+
+## 🚀 How to Run
+
+### Prerequisites
+- AWS Account with appropriate permissions
+- AWS CLI configured
+- Python 3.9+ installed
+
+### Deployment Steps
+
+1. **Set up S3 Buckets**
+   ```bash
+   aws s3 mb s3://your-raw-data-bucket
+   aws s3 mb s3://your-transformed-data-bucket
+   ```
+
+2. **Deploy Lambda Function**
+   - Create Lambda function with provided code
+   - Configure S3 event trigger
+   - Set up IAM roles and permissions
+
+3. **Configure Glue Components**
+   - Create Glue database
+   - Set up crawlers for both buckets
+   - Deploy ETL job script
+
+4. **Test the Pipeline**
+   - Upload sample CSV file to raw data bucket
+   - Monitor Lambda and Glue job execution
+   - Query results in Athena
+
+### Monitoring and Troubleshooting
+- Check CloudWatch logs for Lambda function
+- Monitor Glue job execution status
+- Verify data quality in transformed bucket
+
+---
+
+## 🔮 Future Improvements
+
+- [ ] **Real-time Processing**: Implement Kinesis for streaming data
+- [ ] **Data Quality Checks**: Add automated data validation rules
+- [ ] **Cost Optimization**: Implement S3 lifecycle policies
+- [ ] **Monitoring Dashboard**: Create CloudWatch dashboard
+- [ ] **Error Notifications**: Set up SNS alerts for failures
+- [ ] **Data Lineage**: Implement data lineage tracking
+- [ ] **Security Enhancements**: Add data encryption at rest
+- [ ] **Performance Optimization**: Implement data partitioning strategies
+
+---
+
+## 👨‍💻 Author
+
+**Nivin24**
+- GitHub: [@Nivin24](https://github.com/Nivin24)
+- Project: E-commerce Transactions Data Pipeline
+
+---
+
+*This project demonstrates modern data engineering practices using AWS cloud services for scalable, event-driven data processing.*
