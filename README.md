@@ -177,38 +177,33 @@ def lambda_handler(event, context):
 
 ### Sample Analytical Queries
 
-#### 1. Top Product Categories by Revenue
+#### 1. Top 5 Best Selling Products
 ```sql
-SELECT 
-    product_category,
-    SUM(transaction_amount) as total_revenue,
-    COUNT(*) as transaction_count
-FROM transformed_transactions
-GROUP BY product_category
-ORDER BY total_revenue DESC
-LIMIT 10;
+SELECT product_name,
+       SUM(quantity) AS total_quantity_sold
+FROM "AwsDataCatalog"."ecommerce_db"."curated_for_analysiscurated"
+GROUP BY product_name
+ORDER BY total_quantity_sold DESC
+LIMIT 5;
 ```
 
 #### 2. Monthly Sales Trends
 ```sql
-SELECT 
-    DATE_TRUNC('month', transaction_date) as month,
-    SUM(transaction_amount) as monthly_revenue,
-    COUNT(DISTINCT customer_id) as unique_customers
-FROM transformed_transactions
-GROUP BY DATE_TRUNC('month', transaction_date)
-ORDER BY month;
+SELECT year,
+       month,
+       ROUND(SUM(total_price),2) AS monthly_revenue
+FROM "AwsDataCatalog"."ecommerce_db"."curated_for_analysiscurated"
+GROUP BY year, month
+ORDER BY year, month;
 ```
 
-#### 3. Customer Segmentation
+#### 3. Highest Revenue Generating Categories
 ```sql
-SELECT 
-    customer_location,
-    AVG(transaction_amount) as avg_transaction_value,
-    COUNT(*) as transaction_frequency
-FROM transformed_transactions
-GROUP BY customer_location
-ORDER BY avg_transaction_value DESC;
+SELECT category,
+       ROUND(SUM(total_price),2) AS total_category_revenue
+FROM "AwsDataCatalog"."ecommerce_db"."curated_for_analysiscurated"
+GROUP BY category
+ORDER BY total_category_revenue DESC;
 ```
 
 ---
@@ -220,17 +215,15 @@ Ecommerce_Transactions_Data_Pipeline/
 ├── lambda_functions/
 │   ├── trigger-glue-etl.py
 │   └── requirements.txt
-├── glue_scripts/
-│   ├── pandas_etl_job.py
-│   └── transformation_utils.py
-├── sql_queries/
-│   ├── analytics_queries.sql
-│   └── data_validation.sql
-├── infrastructure/
-│   ├── cloudformation_template.yaml
-│   └── iam_policies.json
-├── sample_data/
-│   └── sample_transactions.csv
+├── etl/
+│   └── pandas_etl_job.py
+├── queries/
+│   ├── all_athena_queries/
+│   │   └── athena_queries.sql
+│   └── Individual_queries/
+│       └── avg_transactions......etc
+├── data/
+│   └── ecommerce_transactions_test.csv
 └── README.md
 ```
 
