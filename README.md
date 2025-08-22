@@ -136,14 +136,16 @@ The dataset contains e-commerce transaction records with the following key attri
 | Column | Type | Description |
 |--------|------|-------------|
 | `transaction_id` | string | Unique transaction identifier |
-| `customer_id` | string | Customer unique identifier |
-| `product_id` | string | Product unique identifier |
-| `product_category` | string | Product category classification |
+| `customer_name` | string | Customer name |
+| `product_name` | string | Product name |
+| `category` | string | Product category classification |
+| `amount` | double | Product amount |
 | `transaction_date` | date | Date of transaction |
-| `transaction_amount` | double | Total transaction amount |
+| `payment_method` | string | Payment method used|
 | `quantity` | int | Number of items purchased |
-| `customer_location` | string | Customer geographic location |
-| `payment_method` | string | Payment method used |
+| `total_price` | double | Total transaction amount |
+| `year` | date | Year |
+| `month` | date | Month |
 
 ---
 
