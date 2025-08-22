@@ -1,0 +1,6 @@
+transaction_id,customer_name,product_name,category,amount,transaction_date,payment_method,quantity,total_price
+321,Ethan Brown,Laptop,Electronics,59999.00,2025-08-23,Credit Card,1,59999.00
+322,Olivia Wilson,Washing Machine,Home Appliances,27999.00,2025-08-23,UPI,1,27999.00
+323,Liam Anderson,Smartwatch,Electronics,9999.00,2025-08-24,Debit Card,1,9999.00
+324,Isabella Thomas,Bookshelf,Furniture,6999.00,2025-08-24,Cash on Delivery,1,6999.00
+325,James Martinez,Bluetooth Speaker,Electronics,3499.00,2025-08-25,Credit Card,2,6998.00
