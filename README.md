@@ -81,10 +81,9 @@ The pipeline automatically triggers data transformation when a new file is uploa
 The dataset contains e-commerce transaction records with the following key attributes:
 
 - **Transaction ID**: Unique identifier for each transaction
-- **Customer Information**: Customer ID, demographics
-- **Product Details**: Product ID, category, price
+- **Customer Information**: Customer name, demographics
+- **Product Details**: Product name, category, price
 - **Transaction Details**: Timestamp, quantity, total amount
-- **Location Data**: Geographic information for analysis
 
 ---
 
