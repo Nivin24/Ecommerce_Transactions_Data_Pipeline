@@ -1,6 +1,0 @@
-transaction_id,customer_name,product_name,category,amount,transaction_date,payment_method,quantity,total_price
-301,Alice Johnson,Smartphone,Electronics,29999.99,2025-08-10,Credit Card,1,29999.99
-302,Michael Smith,Shoes,Clothing,4599.50,2025-08-11,Debit Card,2,9199.00
-303,Emily Davis,Coffee Maker,Home Appliances,3499.00,2025-08-12,Cash on Delivery,1,3499.00
-304,Daniel White,Headphones,Electronics,1999.99,2025-08-13,Credit Card,3,5999.97
-305,Sophia Brown,Table Lamp,Furniture,1299.00,2025-08-14,Debit Card,2,2598.00

@@ -1,6 +1,0 @@
-transaction_id,customer_name,product_name,category,amount,transaction_date,payment_method,quantity,total_price
-316,Liam Wilson,Laptop,Electronics,55999.00,2025-08-23,Credit Card,1,55999.00
-317,Olivia Brown,Refrigerator,Home Appliances,27999.00,2025-08-23,Net Banking,1,27999.00
-318,Noah Taylor,Smartwatch,Electronics,8999.00,2025-08-24,UPI,1,8999.00
-319,Isabella Moore,Coffee Maker,Home Appliances,3499.00,2025-08-24,Cash on Delivery,1,3499.00
-320,Ethan Anderson,Office Chair,Furniture,6999.00,2025-08-25,Debit Card,2,13998.00

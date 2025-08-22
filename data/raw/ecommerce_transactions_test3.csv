@@ -1,6 +1,0 @@
-transaction_id,customer_name,product_name,category,amount,transaction_date,payment_method,quantity,total_price
-311,Sophia Johnson,Air Conditioner,Home Appliances,38999.00,2025-08-20,Credit Card,1,38999.00
-312,Michael Smith,Headphones,Electronics,2499.00,2025-08-20,UPI,2,4998.00
-313,Emma Davis,Sneakers,Footwear,3499.00,2025-08-21,Debit Card,1,3499.00
-314,Daniel Lee,Dining Table,Furniture,15999.00,2025-08-22,Credit Card,1,15999.00
-315,Ava Martinez,Microwave Oven,Home Appliances,7499.00,2025-08-22,Cash on Delivery,1,7499.00

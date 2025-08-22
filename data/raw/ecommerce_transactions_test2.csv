@@ -1,6 +1,0 @@
-transaction_id,customer_name,product_name,category,amount,transaction_date,payment_method,quantity,total_price
-306,David Miller,Laptop,Electronics,75999.00,2025-08-15,Credit Card,1,75999.00
-307,Linda Garcia,Blender,Home Appliances,2999.00,2025-08-16,Cash on Delivery,1,2999.00
-308,James Wilson,Jacket,Clothing,4999.00,2025-08-17,Debit Card,1,4999.00
-309,Olivia Martinez,Coffee Table,Furniture,8999.00,2025-08-18,Credit Card,1,8999.00
-310,William Brown,Smartwatch,Electronics,14999.00,2025-08-19,Credit Card,2,29998.00
